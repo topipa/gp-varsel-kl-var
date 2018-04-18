@@ -13,39 +13,39 @@ import numpy as np
 import scipy as scp
 
 def KLrel(X,model,delta):
-	"""Computes relevance estimates for each covariate using the KL method based on the data matrix X and a GPy model.
-	The parameter delta defines the amount of perturbation used."""
-	n = X.shape[0]
-	p = X.shape[1]
-	relevances = np.zeros(p)
-	jitter = 1e-16
-	
-	# perturbation
-	deltax = np.linspace(-delta,delta,3)
-	
-	# loop through the data points X
-	for j in range(0, n):
+    """Computes relevance estimates for each covariate using the KL method based on the data matrix X and a GPy model.
+    The parameter delta defines the amount of perturbation used."""
+    n = X.shape[0]
+    p = X.shape[1]
+    relevances = np.zeros(p)
+    jitter = 1e-16
 
-		x_n = np.reshape(np.repeat(X[j,:],3),(p,3))
+    # perturbation
+    deltax = np.linspace(-delta,delta,3)
 
-		# loop through covariates
-		for dim in range(0, p):
-			
-			# perturb x_n
-			x_n[dim,:] = x_n[dim,:] + deltax
-			
-			# compute the mean and variance of the predictive distribution
-			preddeltamean,preddeltavar = GPy.models.GPRegression.predict(model,x_n.T,full_cov=False)
-			mean_orig = np.asmatrix(np.repeat(preddeltamean[1],3)).T
-			var_orig = np.asmatrix(np.repeat(preddeltavar[1],3)).T
+    # loop through the data points X
+    for j in range(0, n):
 
-			# compute the relevance estimate at x_n
-			KLsqrt = np.sqrt(0.5*(var_orig/preddeltavar + np.multiply((preddeltamean.reshape(3,1)-mean_orig),(preddeltamean.reshape(3,1)-mean_orig))/preddeltavar - 1 + np.log((preddeltavar/var_orig))) + jitter)
-			relevances[dim] += 0.5*(KLsqrt[0] + KLsqrt[2])/delta
-			
-			# remove the perturbation
-			x_n[dim,:] = x_n[dim,:] - deltax
-	return relevances/n
+        x_n = np.reshape(np.repeat(X[j,:],3),(p,3))
+
+        # loop through covariates
+        for dim in range(0, p):
+            
+            # perturb x_n
+            x_n[dim,:] = x_n[dim,:] + deltax
+            
+            # compute the mean and variance of the predictive distribution
+            preddeltamean,preddeltavar = GPy.models.GPRegression.predict(model,x_n.T,full_cov=False)
+            mean_orig = np.asmatrix(np.repeat(preddeltamean[1],3)).T
+            var_orig = np.asmatrix(np.repeat(preddeltavar[1],3)).T
+
+            # compute the relevance estimate at x_n
+            KLsqrt = np.sqrt(0.5*(var_orig/preddeltavar + np.multiply((preddeltamean.reshape(3,1)-mean_orig),(preddeltamean.reshape(3,1)-mean_orig))/preddeltavar - 1 + np.log((preddeltavar/var_orig))) + jitter)
+            relevances[dim] += 0.5*(KLsqrt[0] + KLsqrt[2])/delta
+            
+            # remove the perturbation
+            x_n[dim,:] = x_n[dim,:] - deltax
+    return relevances/n
 
 
 def VARrel(X,model,nquadr): # now stops jittering when cond_2 < 100
@@ -57,23 +57,23 @@ def VARrel(X,model,nquadr): # now stops jittering when cond_2 < 100
     [points,weights] = np.polynomial.hermite.hermgauss(nquadr)
     jitter = 1e-9
 
-    
-	# full covariance matrix of X plus small jitter on diagonal
+
+    # full covariance matrix of X plus small jitter on diagonal
     fullcov = np.cov(X,rowvar=False) + jitter*np.eye(p)
-    
+
     # if condition number is high, add a diagonal term until it goes below 100
     # this is a bit heuristic
     while (np.linalg.cond(fullcov,p=2) > 100):
         jitter = jitter*10
         fullcov = fullcov + jitter*np.eye(p)
 
-	# Cholesky decomposition of the covariance matrix
+    # Cholesky decomposition of the covariance matrix
     cholfull = scp.linalg.cholesky(fullcov,lower=True)
-    
+
     # loop through covariates
     for j in range(0, p):
 
-		# remove j'th covariate
+        # remove j'th covariate
         jvals = X[:,j]
         nojvals = np.delete(X,(j), axis=1)
         jmean = jvals.mean() 
@@ -89,7 +89,7 @@ def VARrel(X,model,nquadr): # now stops jittering when cond_2 < 100
         meanfactor = scp.linalg.cho_solve((cholsub,True),jnojcov.T).T
         intcov = jcov - np.dot(  meanfactor,jnojcov.T)
 
-		# loop through data points
+        # loop through data points
         for k in range(0, n):
 
             nojtark = nojvals[k,:]
@@ -100,7 +100,7 @@ def VARrel(X,model,nquadr): # now stops jittering when cond_2 < 100
             predmean,predvar = GPy.models.GPRegression.predict(model,fcalcpoints,full_cov=False)
             fsquare = predmean*predmean
 
-			# Gauss-Hermite quadrature integration
+            # Gauss-Hermite quadrature integration
             relevances[j] += np.dot(fsquare.T,weights)/np.sqrt(np.pi) - np.dot(predmean.T,weights)*np.dot(predmean.T,weights)/np.pi
 
     return relevances/n
