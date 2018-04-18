@@ -54,7 +54,7 @@ for i in range(0, repeats):
     # KL relevance value
     rel_KL = rel_KL + varsel.KLrel(x,model,delta)
     
-    # VAR relevance value is the inverse of the length scale
+    # VAR relevance value
     rel_VAR = rel_VAR + varsel.VARrel(x,model,nquadr)
     
  
