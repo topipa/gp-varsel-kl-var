@@ -34,7 +34,7 @@ nquadr2 = 11
 [points,weights] = np.polynomial.hermite.hermgauss(nquadr2)
 std = 0.4
 Anor = np.zeros(m)
-for i in range(0, 8):
+for i in range(0, m):
     coeff = np.sin(phi[i]*np.sqrt(2)*std*points)*np.sin(phi[i]*np.sqrt(2)*std*points)
     var = 1.0/np.sqrt(np.pi)*np.dot(coeff.T,weights)
     Anor[i] = 1/np.sqrt(var)
