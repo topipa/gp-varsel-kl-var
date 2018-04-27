@@ -21,23 +21,38 @@ delta = 0.0001
 # number of quadrature points for VAR method
 nquadr = 11
 
+# if x are uniformly distributed
 # compute the analytical scaling coefficients for the m components
 phi = np.pi*np.linspace(0.1,1,m);
-anaA = np.zeros(m)
+Aunif = np.zeros(m)
 for i in range(0,m):
-    anaA[i] = np.sqrt( 4/(2 -1/phi[i]*np.sin(2*phi[i])) )
+    Aunif[i] = np.sqrt( 4/(2 -1/phi[i]*np.sin(2*phi[i])) )
+
+# if x are normally distributed
+# compute the scaling coefficients for the m components
+nquadr2 = 11
+[points,weights] = np.polynomial.hermite.hermgauss(nquadr2)
+std = 0.4
+Anor = np.zeros(m)
+for i in range(0, 8):
+    coeff = np.sin(phi[i]*np.sqrt(2)*std*points)*np.sin(phi[i]*np.sqrt(2)*std*points)
+    var = 1.0/np.sqrt(np.pi)*np.dot(coeff.T,weights)
+    Anor[i] = 1/np.sqrt(var)
+
 
 rel_ARD = np.zeros(m)
 rel_KL = np.zeros(m)
 rel_VAR = np.zeros(m)
 for i in range(0, repeats):
     x = np.random.uniform(-1.,1.,(n,m))
+    #x = np.random.normal(0.0,std,(n,m))
     print('starting repetition ', i + 1,'/',repeats)
     phi = np.tile(np.linspace(np.pi/10,np.pi,m),(n,1))
     xphi = np.multiply(x[:,0:m],phi)
     f = np.sin(xphi)
     for j in range(0,m):
-        f[:,j] = f[:,j]*anaA[j]    
+        f[:,j] = f[:,j]*Aunif[j]    
+        #f[:,j] = f[:,j]*Anor[j]
     
     # y is a sum of the m components plus Gaussian noise
     yval = f.sum(axis=1) + np.random.normal(0,0.3,(n,))
