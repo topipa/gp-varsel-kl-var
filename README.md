@@ -1,7 +1,7 @@
 # GP_varsel_KL_VAR
 
-A Python implementation for estimating the relevance of covariates
-in Gaussian process regression. The repository contains functions
+A Python implementation for estimating the predictive relevance of input variables
+for Gaussian process models. The repository contains functions
 that use methods from the paper Paananen et al. (2018). There is also
 a small demo that demonstrates the toy example from the paper. The functions utilize
 the GPy framework (https://github.com/SheffieldML/GPy) for Gaussian process inference.
