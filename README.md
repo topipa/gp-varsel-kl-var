@@ -1,4 +1,4 @@
-# GP_varsel_KL_VAR
+# gp-varsel-kl-var
 
 A Python implementation for estimating the predictive relevance of input variables
 for Gaussian process models. The repository contains functions
